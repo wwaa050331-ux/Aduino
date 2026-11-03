@@ -394,3 +394,97 @@ void loop() {
   delay(500);
 }
 ```
+---   
+# week10   
+
+##  ① 커서 깜박이기 → ② 숫자 0~10 카운트업 → ③ Hello! 3번 깜박이기  
+
+---  
+
+```cpp
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+void setup() {
+  lcd.init();
+  lcd.backlight();
+
+  // =================================
+  // 1. Cursor ON-Blink / OFF
+  // =================================
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Cursor ON-Blink");
+
+  lcd.setCursor(0, 1);
+  lcd.cursor();
+  lcd.blink();
+
+  delay(2000);  // 2초 깜박임
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Cursor OFF");
+
+  lcd.setCursor(0, 1);
+  lcd.cursor();
+  lcd.blink();
+
+  delay(1000);
+
+  lcd.noBlink();  // 깜박임 정지
+
+  delay(1000);
+
+  lcd.noCursor(); // 커서 제거
+
+  delay(1000);
+
+  lcd.clear();
+
+
+  // =================================
+  // 2. Count up (0 ~ 10)
+  // =================================
+
+  lcd.setCursor(0, 0);
+  lcd.print("Count up");
+
+  delay(1000);
+
+  for (int k = 0; k <= 10; k++) {
+    lcd.setCursor(0, 0);
+    lcd.print("No : ");
+    lcd.print(k);
+    lcd.print("  ");
+
+    delay(200);  // 0.2초 간격
+  }
+
+  lcd.clear();
+
+
+  // =================================
+  // 3. Hello! 3번 깜박이기
+  // =================================
+
+  lcd.setCursor(0, 0);
+  lcd.print("Hello!");
+
+  for (int k = 0; k < 3; k++) {
+    lcd.noDisplay();  // 화면 끄기
+    delay(1000);
+
+    lcd.display();    // 화면 켜기
+    delay(1000);
+  }
+
+  lcd.clear();
+}
+
+void loop() {
+}
+```  
