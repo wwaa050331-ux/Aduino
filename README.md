@@ -485,6 +485,115 @@ void setup() {
   lcd.clear();
 ```
 
+```cpp
+
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+void setup() {
+  lcd.init();
+  lcd.backlight();
+
+  // =================================
+  // 1. Cursor ON-Blink / OFF
+  // =================================
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Cursor ON-Blink");
+
+  lcd.setCursor(0, 1);
+  lcd.cursor();
+  lcd.blink();
+
+  delay(2000);
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Cursor OFF");
+
+  lcd.setCursor(0, 1);
+  lcd.cursor();
+  lcd.blink();
+
+  delay(1000);
+
+  lcd.noBlink();
+  delay(1000);
+
+  lcd.noCursor();
+  delay(1000);
+
+  lcd.clear();
+
+
+  // =================================
+  // 2. Count up (0 ~ 10)
+  // =================================
+
+  lcd.setCursor(0, 0);
+  lcd.print("Count up");
+
+  delay(1000);
+
+  for (int k = 0; k <= 10; k++) {
+    lcd.setCursor(0, 0);
+    lcd.print("No : ");
+    lcd.print(k);
+    lcd.print("  ");
+
+    delay(200);
+  }
+
+  lcd.clear();
+
+
+  // =================================
+  // 3. Hello! 3번 깜박이기
+  // =================================
+
+  lcd.setCursor(0, 0);
+  lcd.print("Hello!");
+
+  for (int k = 0; k < 3; k++) {
+    lcd.noDisplay();
+    delay(1000);
+
+    lcd.display();
+    delay(1000);
+  }
+
+  lcd.clear();
+
+
+  // =================================
+  // 4. Hello 오른쪽 / 왼쪽 이동
+  // =================================
+
+  lcd.setCursor(6, 0);
+  lcd.print("Hello");
+
+  // 오른쪽으로 3번 이동
+  for (int k = 0; k < 3; k++) {
+    lcd.scrollDisplayRight();
+    delay(1000);
+  }
+
+  // 왼쪽으로 3번 이동
+  for (int k = 0; k < 3; k++) {
+    lcd.scrollDisplayLeft();
+    delay(1000);
+  }
+
+  lcd.clear();
+}
+
+void loop() {
+}
+
+
 ---
 
 
