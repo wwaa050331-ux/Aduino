@@ -483,6 +483,11 @@ void setup() {
   }
 
   lcd.clear();
+```
+
+---
+
+
 }
 
 void loop() {
