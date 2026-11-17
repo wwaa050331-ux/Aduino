@@ -602,3 +602,177 @@ void loop() {
 void loop() {
 }
 ```  
+
+---  
+# week12  
+
+### 초음파 센서(TRIG 37, ECHO 41)로 물체까지의 왕복 시간을 측정해 cm와 inch 단위로 동시에 거리를 계산합니다.
+
+### PUSH_UP(26번) 버튼을 누르면 LCD 화면에 센티미터(cm) 단위로, PUSH_DOWN(24번) 버튼을 누르면 인치(inch) 단위로 거리를 출력합니다.
+
+### 측정 범위를 벗어나면(400cm / 157inch 초과 또는 0) Out of Range를 표시하며, 현재 올려주신 텍스트는 동일한 코드가 두 번 중복되어 있으니 한 번만 남기고 사용하셔야 합니다.  
+
+```cpp
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+#define PUSH_UP 26
+#define PUSH_DOWN 24
+#define TRIG 37 // 트리거 핀을 지정
+#define ECHO 41 // 에코 핀을 지정
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+void setup()
+{
+  lcd.init();
+  lcd.backlight();
+  lcd.clear();
+  
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+  pinMode(PUSH_UP, INPUT);
+  pinMode(PUSH_DOWN, INPUT);
+}
+
+void loop()
+{
+  // 1. 초음파 펄스 발생 (10us 이상 유지)
+  digitalWrite(TRIG, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG, LOW);
+
+  // 2. 에코 신호 수신 (30ms 타임아웃 설정으로 무한 대기 방지)
+  long Time = pulseIn(ECHO, HIGH, 30000);
+  long distance_cm = Time / 58;
+  long distance_inch = Time / 148;
+
+  // 3. PUSH_UP 버튼 눌렀을 때 (cm 출력)
+  if (digitalRead(PUSH_UP) == HIGH)
+  {
+    lcd.setCursor(0, 0);
+    lcd.print("DIST:  ");
+    lcd.setCursor(7, 0);
+    
+    // 측정 범위를 벗어나거나(400cm 초과) 수신 실패(0)일 때 예외 처리
+    if (distance_cm == 0 || distance_cm > 400) {
+      lcd.print("Out of Range");
+    } else {
+      lcd.print(String(distance_cm) + " cm     "); // 뒤 공백으로 잔상 제거
+    }
+  }
+
+  // 4. PUSH_DOWN 버튼 눌렀을 때 (inch 출력)
+  if (digitalRead(PUSH_DOWN) == HIGH)
+  {
+    lcd.setCursor(0, 0);
+    lcd.print("DIST:  ");
+    lcd.setCursor(7, 0);
+    
+    if (distance_inch == 0 || distance_inch > 157) {
+      lcd.print("Out of Range");
+    } else {
+      lcd.print(String(distance_inch) + " inch   "); // 뒤 공백으로 잔상 제거
+    }
+  }
+
+  delay(100);
+}
+
+```
+
+### 초음파 센서(TRIG 37, ECHO 41)로 물체까지의 거리를 측정하여 cm 단위로 실시간 계산합니다.
+
+### 측정 거리가 25cm 이하일 때는 경고 구간으로 판단해 LCD에 Warning을 띄우고 경고 LED를 점등하며, 400cm를 초과하면 Out of range를 표시합니다.
+
+### 정상 및 경고 구간 모두 LCD와 4자리 FND(7세그먼트)에 현재 거리를 동시에 출력합니다.  
+```cpp  
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <TM1637Display.h> // 4자리 FND(7세그먼트) 라이브러리
+
+// 1. 핀 번호 설정 (첫 번째 사진 및 보드 기준)
+#define TRIG 37
+#define ECHO 41
+
+// ★ 보드에 연결된 FND(CLK, DIO) 및 LED 핀 번호로 수정하세요!
+#define FND_CLK 2
+#define FND_DIO 3
+#define LED_PIN 13  // 경고 LED 핀 (여러 개라면 배열로 확장 가능)
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+TM1637Display display(FND_CLK, FND_DIO);
+
+void setup() {
+  Serial.begin(9600);
+  
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+  pinMode(LED_PIN, OUTPUT);
+
+  // LCD 초기화
+  lcd.init();
+  lcd.backlight();
+  lcd.clear();
+
+  // FND(7세그먼트) 밝기 설정 (0~7)
+  display.setBrightness(0x0f);
+}
+
+void loop() {
+  // 초음파 발사
+  digitalWrite(TRIG, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG, LOW);
+
+  // 거리 계산 (cm)
+  long duration = pulseIn(ECHO, HIGH);
+  long distance = duration / 58.2;
+
+  lcd.clear();
+
+  // 1. 범위 초과 (Out of range: 0 이하이거나 400cm 초과)
+  if (distance <= 0 || distance > 400) {
+    lcd.setCursor(0, 0);
+    lcd.print("Distance System");
+    lcd.setCursor(0, 1);
+    lcd.print("Out of range");
+    
+    display.clear(); // FND 끄기
+    digitalWrite(LED_PIN, LOW);
+  }
+  // 2. 경고 구간 (영상 기준 25cm 이하일 때 Warning 표시 및 LED 점등)
+  else if (distance <= 25) {
+    lcd.setCursor(0, 0);
+    lcd.print("Warning");
+    lcd.setCursor(0, 1);
+    lcd.print("Distance: ");
+    lcd.print(distance);
+    lcd.print(" cm");
+
+    display.showNumberDec(distance, false); // FND에 거리 출력
+    digitalWrite(LED_PIN, HIGH);            // LED 켜기
+  }
+  // 3. 정상 구간 (25cm 초과 ~ 400cm 이하)
+  else {
+    lcd.setCursor(0, 0);
+    lcd.print("Distance System");
+    lcd.setCursor(0, 1);
+    lcd.print("Distance: ");
+    lcd.print(distance);
+    lcd.print(" cm");
+
+    display.showNumberDec(distance, false); // FND에 거리 출력
+    digitalWrite(LED_PIN, LOW);             // LED 끄기
+  }
+
+  delay(200); // 화면 깜빡임 방지를 위한 딜레이
+}  
+
+
+```
+
